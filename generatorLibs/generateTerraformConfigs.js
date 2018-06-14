@@ -1,7 +1,8 @@
 #!/usr/bin/env node
-// const Promise = require('bluebird')
+const Promise = require('bluebird')
 const GenesisDevice = require('genesis-device')
 const url = require('url')
+const getBitbucketRepoInfo = require('./getBitbucketRepoInfo')
 
 module.exports = (reposToPipelines, concourseUrl) => {
 	const importHelper = []
@@ -35,53 +36,81 @@ module.exports = (reposToPipelines, concourseUrl) => {
 	filesToWrite['provider.tf'] = providerGenesis
 
 	// Create each repo's file
-	Object.keys(reposToPipelines).forEach(repoFullName => {
-		reposToPipelines[repoFullName].forEach(hookObj => {
-			// Separate the files by repository
+	return Promise.each(Object.keys(reposToPipelines), repoFullName =>
+
+		// First, grab all information about this repository
+		getBitbucketRepoInfo(repoFullName).then(repoInfo => {
+			// console.trace(repoInfo)
+
+			// Create a new file for this repo
 			const genesis = new GenesisDevice()
 
 			const [repoOwner, repoName] = repoFullName.split('/')
-			const tfResourceName = repoName.replace(/-/g, '_')
+			const tfRepositoryResourceName = repoName.replace(/-/g, '_')
 
-			genesis.addResource('bitbucket_repository', tfResourceName, {
+			// Pick out some metadata from our retrieved information
+			const repoMetadata = {}
+			const cherryPickMeta = key => {
+				if( key in repoInfo && repoInfo[key] ) {
+					repoMetadata[key] = repoInfo[key]
+				}
+			}
+			cherryPickMeta('fork_policy')
+			cherryPickMeta('language')
+			cherryPickMeta('is_private')
+			cherryPickMeta('description')
+			cherryPickMeta('slug')
+
+			if( 'project' in repoInfo && 'key' in repoInfo.project ) {
+				repoMetadata.project_key = repoInfo.project.key
+			}
+
+			genesis.addResource('bitbucket_repository', tfRepositoryResourceName, Object.assign({
 				owner: repoOwner,
-				name: repoName,
-				// project_key:
-				// is_private: true,
-				fork_policy: 'no_public_forks',
+				name: repoInfo.name,
+			}, repoMetadata))
+
+			reposToPipelines[repoFullName].forEach(hookObj => {
+				const fullConcourseHookUrl = new url.URL('/' + [
+					'api', 'v1', 'teams', hookObj.teamName,
+					'pipelines', hookObj.pipelineName,
+					'resources', hookObj.resourceName,
+					'check',
+					`webhook?webhook_token=${hookObj.token}`,
+				].join('/'), concourseUrl).toString()
+
+				const tfHookResourceName = `${hookObj.pipelineName}_${hookObj.resourceName}`.replace(/-/g, '_')
+
+				genesis.addResource('bitbucket_hook', tfHookResourceName, {
+					owner: `\${bitbucket_repository.${tfRepositoryResourceName}.owner}`,
+					repository: `${repoName}`,
+					url: fullConcourseHookUrl,
+
+					description: [
+						'Concourse',
+						hookObj.teamName,
+						hookObj.pipelineName,
+						hookObj.resourceName,
+					].join(' - '),
+
+					skip_cert_verification: true,
+
+					events: [
+						'repo:push',
+					],
+				})
 			})
 
-			const fullConcourseHookUrl = new url.URL('/' + [
-				'api', 'v1', 'teams', hookObj.teamName,
-				'pipelines', hookObj.pipelineName,
-				'resources', hookObj.resourceName,
-				'check',
-				`webhook?webhook_token=${hookObj.token}`,
-			].join('/'), concourseUrl).toString()
+			// Write out an import string-- deduplicated
+			const importString = `terraform import bitbucket_repository.${tfRepositoryResourceName} ${repoFullName}`
+			if( importHelper.indexOf(importString) === -1 ) {
+				importHelper.push(importString)
+			}
 
-			genesis.addResource('bitbucket_hook', tfResourceName, {
-				owner: `\${bitbucket_repository.${tfResourceName}.owner}`,
-				repository: `\${bitbucket_repository.${tfResourceName}.name}`,
-				url: fullConcourseHookUrl,
+			filesToWrite[`${tfRepositoryResourceName}.tf`] = genesis
 
-				description: [
-					'Concourse',
-					hookObj.teamName,
-					hookObj.pipelineName,
-					hookObj.resourceName,
-				].join(' - '),
-
-				skip_cert_verification: true,
-
-				events: [
-					'repo:push',
-				],
-			})
-
-			filesToWrite[`${tfResourceName}.tf`] = genesis
-			importHelper.push(`terraform import bitbucket_repository.${tfResourceName} ${repoName}`)
+			return Promise.resolve()
 		})
-	})
-
-	return {filesToWrite, importHelper}
+	)
+		.then(() => Promise.resolve({filesToWrite, importHelper}))
 }

@@ -5,12 +5,6 @@ const fs = Promise.promisifyAll(require('fs'))
 const getTokens = require('./getTokens')
 const readTemplatedYaml = require('./readTemplatedYaml')
 
-process.on('unhandledRejection', error => {
-	// Will print "unhandledRejection err is not defined"
-	console.error('unhandledRejection', error.message)
-	process.exit(3)
-})
-
 const justFileName = fullFilename => fullFilename.split('.')[0]
 
 const reposToPipelines = {}

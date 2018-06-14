@@ -1,6 +1,7 @@
 module.exports = function (obj, compositeData = {}) {
 	const tokens = {}
 	obj.resources.forEach(resource => {
+		// Grab all Git resources with webhook_token defined,
 		if( resource.type !== 'git' ) { return }
 		if( 'webhook_token' in resource && resource.webhook_token ) {
 			// Extract the repo name
@@ -9,6 +10,7 @@ module.exports = function (obj, compositeData = {}) {
 				tokens[repoName] = []
 			}
 
+			// compile them into an array of hashes
 			tokens[repoName].push(Object.assign({
 				token: resource.webhook_token,
 				resourceName: resource.name,

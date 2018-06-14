@@ -20,13 +20,17 @@ const combineIntoObject = newTokens => {
 }
 
 module.exports = root => {
+	// Use the Autotree pattern to figure out which team, pipeline, and variant
+	// each file belongs to.
 	const teamDir = path.resolve(root, 'teams')
 
 	return fs.readdirAsync(teamDir).map(teamName =>
 		fs.readdirAsync(path.resolve(teamDir, teamName)).map(pipelineName => {
+			// This function is defined ahead of time so we can support
+			// standalone or variant pipelines
 			const getDataAndUseIt = (inputName, filePaths) => {
 				return readTemplatedYaml(filePaths).then(fileData => {
-					// Send the file itself, all templated out, to getTokens.
+					// Extract the webhook tokens from the fully templated file.
 					// Also send an object that will be composited into every item returned.
 					combineIntoObject(getTokens(fileData, {
 						pipelineName: inputName,

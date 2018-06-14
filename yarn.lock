@@ -452,9 +452,9 @@ functional-red-black-tree@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/functional-red-black-tree/-/functional-red-black-tree-1.0.1.tgz#1b0ab3bd553b2a0d6399d29c0e3ea0b252078327"
 
-genesis-device@^0.1.1:
+genesis-device@mayanklahiri/node-genesis-device#0b03ca0:
   version "0.1.1"
-  resolved "https://registry.yarnpkg.com/genesis-device/-/genesis-device-0.1.1.tgz#58b9772658a40fe7c4e16afda62fe1b119545b7f"
+  resolved "https://codeload.github.com/mayanklahiri/node-genesis-device/tar.gz/0b03ca0910cfb09d9bfa67be8ac201d8b78506b9"
   dependencies:
     lodash "^4.17.4"
 

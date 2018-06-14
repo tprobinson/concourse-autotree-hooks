@@ -1,22 +1,43 @@
 {
-  "name": "terraform-bitbucket",
-  "version": "0.0.0",
-  "description": "Dummy package to get the scripts for Terraform to work.",
+  "name": "concourse-autotree-hooks",
+  "version": "0.1.0",
+  "description": "A script to manage Concourse webhooks automatically using Terraform.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "eslint index.js generatorLibs"
+  },
+  "bin": {
+    "autotree-hooks-generate": "index.js"
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@bitbucket.org/funkodev/terraform-bitbucket.git"
+    "url": "git+https://github.com/tprobinson/concourse-autotree-hooks.git"
   },
-  "author": "",
-  "license": "ISC",
-  "homepage": "https://bitbucket.org/funkodev/terraform-bitbucket#readme",
+  "keywords": [
+    "autotree",
+    "bitbucket",
+    "hooks",
+    "webhooks",
+    "stash",
+    "concourse",
+    "cli",
+    "terraform",
+    "automatic",
+    "webhook"
+  ],
+  "author": {
+    "name": "Trevor Robinson",
+    "url": "https://keybase.io/tpr"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/tprobinson/concourse-autotree-hooks/issues"
+  },
+  "homepage": "https://github.com/tprobinson/concourse-autotree-hooks#readme",
   "dependencies": {
     "arg": "^2.0.0",
     "bluebird": "^3.5.1",
-    "genesis-device": "^0.1.1",
+    "genesis-device": "mayanklahiri/node-genesis-device#0b03ca0",
     "ini": "^1.3.5",
     "yaml-parser": "^3.5.3"
   },

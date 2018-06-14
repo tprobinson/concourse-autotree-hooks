@@ -4,15 +4,15 @@ This is not a typical Terraform repository. This repository is intended to link 
 
 <!-- MDTOC maxdepth:2 firsth1:1 numbering:0 flatten:0 bullets:1 updateOnSave:1 -->
 
-- [Terraform Bitbucket](#Terraform-Bitbucket)   
-- [Prerequisites](#Prerequisites)   
-   - [Setup](#Setup)   
-- [Usage](#Usage)   
-   - [Generate Terraform Files](#Generate-Terraform-Files)   
-   - [Import Resources (First Run)](#Import-Resources-First-Run)   
-   - [Run Terraform](#Run-Terraform)   
-   - [Known Issues / TODO](#Known-Issues-TODO)   
-   - [Development](#Development)   
+- [Terraform Bitbucket](#Terraform-Bitbucket)
+- [Prerequisites](#Prerequisites)
+   - [Setup](#Setup)
+- [Usage](#Usage)
+   - [Generate Terraform Files](#Generate-Terraform-Files)
+   - [Import Resources (First Run)](#Import-Resources-First-Run)
+   - [Run Terraform](#Run-Terraform)
+   - [Known Issues / TODO](#Known-Issues-TODO)
+   - [Development](#Development)
 
 <!-- /MDTOC -->
 
@@ -53,6 +53,13 @@ Run Yarn (or NPM) in this repository to install everything needed.
 yarn
 ```
 
+You may have to use [this fork](https://github.com/tprobinson/node-genesis-device) of node-genesis-device, unless it's been merged in.
+
+To do that, checkout the linked repository on the `backends` branch. Go into it and run `npm link`.
+
+Then, in this repository, **after running Yarn**, run `npm link genesis-device`.
+
+You will need to re-run `npm link genesis-device` every time you run Yarn in this directory.
 
 # Usage
 

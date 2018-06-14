@@ -4,7 +4,7 @@ const GenesisDevice = require('genesis-device')
 const url = require('url')
 const getBitbucketRepoInfo = require('./getBitbucketRepoInfo')
 
-module.exports = (reposToPipelines, concourseUrl) => {
+module.exports = (reposToPipelines, concourseUrl, manageRepositories = false) => {
 	const importHelper = []
 	const filesToWrite = {}
 
@@ -36,10 +36,15 @@ module.exports = (reposToPipelines, concourseUrl) => {
 	filesToWrite['provider.tf'] = providerGenesis
 
 	// Create each repo's file
-	return Promise.each(Object.keys(reposToPipelines), repoFullName =>
+	return Promise.each(Object.keys(reposToPipelines), repoFullName => {
+		let promise = Promise.resolve()
 
-		// First, grab all information about this repository
-		getBitbucketRepoInfo(repoFullName).then(repoInfo => {
+		// We need to retrieve information about the repository if we're managing it
+		if( manageRepositories ) {
+			promise = getBitbucketRepoInfo(repoFullName)
+		}
+
+		promise = promise.then(repoInfo => {
 			// console.trace(repoInfo)
 
 			// Create a new file for this repo
@@ -48,27 +53,35 @@ module.exports = (reposToPipelines, concourseUrl) => {
 			const [repoOwner, repoName] = repoFullName.split('/')
 			const tfRepositoryResourceName = repoName.replace(/-/g, '_')
 
-			// Pick out some metadata from our retrieved information
-			const repoMetadata = {}
-			const cherryPickMeta = key => {
-				if( key in repoInfo && repoInfo[key] ) {
-					repoMetadata[key] = repoInfo[key]
+			if( manageRepositories ) {
+				// Pick out some metadata from our retrieved information
+				const repoMetadata = {}
+				const cherryPickMeta = key => {
+					if( key in repoInfo && repoInfo[key] ) {
+						repoMetadata[key] = repoInfo[key]
+					}
+				}
+				cherryPickMeta('fork_policy')
+				cherryPickMeta('language')
+				cherryPickMeta('is_private')
+				cherryPickMeta('description')
+				cherryPickMeta('slug')
+
+				if( 'project' in repoInfo && 'key' in repoInfo.project ) {
+					repoMetadata.project_key = repoInfo.project.key
+				}
+
+				genesis.addResource('bitbucket_repository', tfRepositoryResourceName, Object.assign({
+					owner: repoOwner,
+					name: repoInfo.name,
+				}, repoMetadata))
+
+				// Write out an import string-- deduplicated
+				const importString = `terraform import bitbucket_repository.${tfRepositoryResourceName} ${repoFullName}`
+				if( importHelper.indexOf(importString) === -1 ) {
+					importHelper.push(importString)
 				}
 			}
-			cherryPickMeta('fork_policy')
-			cherryPickMeta('language')
-			cherryPickMeta('is_private')
-			cherryPickMeta('description')
-			cherryPickMeta('slug')
-
-			if( 'project' in repoInfo && 'key' in repoInfo.project ) {
-				repoMetadata.project_key = repoInfo.project.key
-			}
-
-			genesis.addResource('bitbucket_repository', tfRepositoryResourceName, Object.assign({
-				owner: repoOwner,
-				name: repoInfo.name,
-			}, repoMetadata))
 
 			reposToPipelines[repoFullName].forEach(hookObj => {
 				const fullConcourseHookUrl = url.format({
@@ -87,7 +100,7 @@ module.exports = (reposToPipelines, concourseUrl) => {
 				const tfHookResourceName = `${hookObj.pipelineName}_${hookObj.resourceName}`.replace(/-/g, '_')
 
 				genesis.addResource('bitbucket_hook', tfHookResourceName, {
-					owner: `\${bitbucket_repository.${tfRepositoryResourceName}.owner}`,
+					owner: repoOwner,
 					repository: `${repoName}`,
 					url: fullConcourseHookUrl,
 
@@ -106,16 +119,12 @@ module.exports = (reposToPipelines, concourseUrl) => {
 				})
 			})
 
-			// Write out an import string-- deduplicated
-			const importString = `terraform import bitbucket_repository.${tfRepositoryResourceName} ${repoFullName}`
-			if( importHelper.indexOf(importString) === -1 ) {
-				importHelper.push(importString)
-			}
-
 			filesToWrite[`${tfRepositoryResourceName}.tf`] = genesis
 
 			return Promise.resolve()
 		})
-	)
+
+		return promise
+	})
 		.then(() => Promise.resolve({filesToWrite, importHelper}))
 }

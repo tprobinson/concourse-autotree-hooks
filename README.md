@@ -72,11 +72,12 @@ node generate.js --concourse-root ~/concourse --concourse-webhook-url https://xx
 ```
 
 ### Flags
-| Name                  | Default Value | Description                                                                  |
-| --------------------- | ------------- | ---------------------------------------------------------------------------- |
-| concourse-root        | N/A           | A file path to the Concourse Pipelines repository.                           |
-| concourse-webhook-url | N/A           | The protocol and hostname where Bitbucket can reach your Concourse instance. |
-| noop                  | false         | Specify --noop to see what the generator would create, rather than actually do it.                                                                             |
+| Name                  | Default Value | Description                                                                        |
+| --------------------- | ------------- | ---------------------------------------------------------------------------------- |
+| concourse-root        | N/A           | A file path to the Concourse Pipelines repository.                                 |
+| concourse-webhook-url | N/A           | The protocol and hostname where Bitbucket can reach your Concourse instance.       |
+| noop                  | false         | Specify --noop to see what the generator would create, rather than actually do it. |
+| manage-repositories   | false         | Create a resource to manage each repository at the same time. Usually unnecessary.                                                                                    |
 
 
 ## Import Resources (First Run)

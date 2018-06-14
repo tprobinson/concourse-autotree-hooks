@@ -22,9 +22,11 @@ module.exports = (args, filesToWrite, importHelper) =>
 			}))
 		)
 		.then(() => {
-			if( args['--noop'] ) {
-				console.log(`Would write importHelper.sh:\n${importHelper.join('\n')}\n\n`)
-				return Promise.resolve()
+			if( importHelper && importHelper.length > 0 ) {
+				if( args['--noop'] ) {
+					console.log(`Would write importHelper.sh:\n${importHelper.join('\n')}\n\n`)
+					return Promise.resolve()
+				}
+				return fs.writeFileAsync('importHelper.sh', importHelper.join('\n'))
 			}
-			return fs.writeFileAsync('importHelper.sh', importHelper.join('\n'))
 		})

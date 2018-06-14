@@ -18,6 +18,7 @@ const args = arg({
 	// Types
 	'--concourse-root': String,
 	'--concourse-webhook-url': String,
+	'--manage-repositories': Boolean,
 	'--noop': Boolean,
 })
 
@@ -38,7 +39,7 @@ readConcourseWebhooks(args['--concourse-root'])
 		}, {})
 
 		console.log('Generating terraform configurations...')
-		return generateTerraformConfigs(myPipelines, args['--concourse-webhook-url'])
+		return generateTerraformConfigs(myPipelines, args['--concourse-webhook-url'], args['--manage-repositories'])
 	})
 	.then(terraformConfigs => {
 		console.log('Writing Terraform files...')

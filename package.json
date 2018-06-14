@@ -1,0 +1,30 @@
+{
+  "name": "terraform-bitbucket",
+  "version": "0.0.0",
+  "description": "Dummy package to get the scripts for Terraform to work.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@bitbucket.org/funkodev/terraform-bitbucket.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "homepage": "https://bitbucket.org/funkodev/terraform-bitbucket#readme",
+  "dependencies": {
+    "arg": "^2.0.0",
+    "bluebird": "^3.5.1",
+    "genesis-device": "^0.1.1",
+    "yaml-parser": "^3.5.3"
+  },
+  "devDependencies": {
+    "eslint": "^4.19.1",
+    "eslint-config-standard": "^11.0.0",
+    "eslint-plugin-import": "^2.12.0",
+    "eslint-plugin-node": "^6.0.1",
+    "eslint-plugin-promise": "^3.7.0",
+    "eslint-plugin-standard": "^3.1.0"
+  }
+}

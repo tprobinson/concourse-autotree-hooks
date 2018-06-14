@@ -71,13 +71,18 @@ module.exports = (reposToPipelines, concourseUrl) => {
 			}, repoMetadata))
 
 			reposToPipelines[repoFullName].forEach(hookObj => {
-				const fullConcourseHookUrl = new url.URL('/' + [
-					'api', 'v1', 'teams', hookObj.teamName,
-					'pipelines', hookObj.pipelineName,
-					'resources', hookObj.resourceName,
-					'check',
-					`webhook?webhook_token=${hookObj.token}`,
-				].join('/'), concourseUrl).toString()
+				const fullConcourseHookUrl = url.format({
+					host: concourseUrl,
+					pathname: '/' + [
+						'api', 'v1', 'teams', hookObj.teamName,
+						'pipelines', hookObj.pipelineName,
+						'resources', hookObj.resourceName,
+						'check', 'webhook',
+					].join('/'),
+					query: {
+						webhook_token: hookObj.token,
+					}
+				})
 
 				const tfHookResourceName = `${hookObj.pipelineName}_${hookObj.resourceName}`.replace(/-/g, '_')
 

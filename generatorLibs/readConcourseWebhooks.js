@@ -36,6 +36,11 @@ module.exports = root => {
 				})
 			}
 
+			// Don't do anything if the pipeline is disabled
+			if( fs.existsSync(path.resolve(teamDir, teamName, pipelineName, 'disabled')) ) {
+				return Promise.resolve()
+			}
+
 			if( fs.existsSync(path.resolve(teamDir, teamName, pipelineName, 'variants')) ) {
 				// variants folder exists, multiple pipelines for same repo
 				return fs.readdirAsync(path.resolve(teamDir, teamName, pipelineName, 'variants'))

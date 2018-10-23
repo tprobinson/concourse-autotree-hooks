@@ -1,6 +1,6 @@
 {
   "name": "concourse-autotree-hooks",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "A script to manage Concourse webhooks automatically using Terraform.",
   "main": "index.js",
   "scripts": {

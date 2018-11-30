@@ -20,6 +20,15 @@ Currently this tool only works for Bitbucket, but other support may be added and
 
 <!-- /MDTOC -->
 
+## Changelog
+
+##### 0.2.0
+- Generated hook resources now include the team name to prevent collisions of same names on different teams. To migrate from the previous version, do the following.
+  - `terraform state pull > old.state`
+  - Replace all `bitbucket_hook` resource names with one prefixed with "$TEAMNAME_". If you have only one team, here's a shortcut: `sed -i.bak -e "s/bitbucket_hook\./bitbucket_hook.$TEAM_NAME/g" old.state`
+  - `terraform state push old.state`
+  - Regenerate your TF files with the new version of this tool.
+
 ## Prerequisites
 
 * Terraform

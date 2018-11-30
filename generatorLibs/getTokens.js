@@ -20,6 +20,6 @@ module.exports = function (obj, compositeData = {}) {
 			}
 		})
 	}
-	
+
 	return tokens
 }

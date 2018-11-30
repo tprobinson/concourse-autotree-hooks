@@ -101,7 +101,7 @@ module.exports = (args, reposToPipelines) => {
 						}
 					})
 
-					const tfHookResourceName = `${hookObj.pipelineName}_${hookObj.resourceName}`.replace(/-/g, '_')
+					const tfHookResourceName = `${hookObj.teamName}_${hookObj.pipelineName}_${hookObj.resourceName}`.replace(/-/g, '_')
 					const resourceConfig = {
 						owner: repoOwner,
 						repository: `${repoName}`,

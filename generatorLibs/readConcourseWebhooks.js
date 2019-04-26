@@ -1,68 +1,102 @@
 #!/usr/bin/env node
-const Promise = require('bluebird')
 const path = require('path')
-const fs = Promise.promisifyAll(require('fs'))
+const fs = require('fs').promises
 const getTokens = require('./getTokens')
 const readTemplatedYaml = require('./readTemplatedYaml')
 
-const justFileName = fullFilename => fullFilename.split('.')[0]
-
-const reposToPipelines = {}
-
-const combineIntoObject = newTokens => {
-	// Merge this information into reposToPipelines
-	Object.keys(newTokens).forEach(repoName => {
-		if( !(repoName in reposToPipelines) ) {
-			reposToPipelines[repoName] = []
-		}
-		reposToPipelines[repoName] = reposToPipelines[repoName].concat(newTokens[repoName])
-	})
+const isDir = async fileLoc => {
+  const lstat = await fs.lstat(fileLoc)
+  return lstat.isDirectory()
 }
 
-module.exports = root => {
-	// Use the Autotree pattern to figure out which team, pipeline, and variant
-	// each file belongs to.
-	const teamDir = path.resolve(root, 'teams')
+const exists = async fileLoc => {
+  try {
+    await fs.access(fileLoc)
+    return true
+  } catch ( e ) {
+    if( e.code === 'ENOENT' ) {
+      return false
+    }
+    throw e
+  }
+}
 
-	return fs.readdirAsync(teamDir).map(teamName =>
-		fs.readdirAsync(path.resolve(teamDir, teamName)).map(pipelineName => {
-			// This function is defined ahead of time so we can support
-			// standalone or variant pipelines
-			const getDataAndUseIt = (inputName, filePaths) => {
-				return readTemplatedYaml(filePaths).then(fileData => {
-					// Extract the webhook tokens from the fully templated file.
-					// Also send an object that will be composited into every item returned.
-					combineIntoObject(getTokens(fileData, {
-						pipelineName: inputName,
-						teamName,
-					}))
-					return Promise.resolve()
-				})
-			}
+module.exports = async root => {
+  try {
+    const commonVarsPath = path.resolve(root, 'common-vars.yml')
+    const credentialsPath = path.resolve(root, 'credentials.yml')
 
-			// Don't do anything if the pipeline is disabled
-			if( fs.existsSync(path.resolve(teamDir, teamName, pipelineName, 'disabled')) ) {
-				return Promise.resolve()
-			}
+    // Use the Autotree pattern to figure out which team, pipeline, and variant
+    // each file belongs to.
+    const teamDir = path.resolve(root, 'teams')
 
-			if( fs.existsSync(path.resolve(teamDir, teamName, pipelineName, 'variants')) ) {
-				// variants folder exists, multiple pipelines for same repo
-				return fs.readdirAsync(path.resolve(teamDir, teamName, pipelineName, 'variants'))
-					.map(variantName => getDataAndUseIt(justFileName(variantName), [
-						path.resolve(teamDir, teamName, pipelineName, `${pipelineName}.yml`),
-						path.resolve(root, 'common-vars.yml'),
-						path.resolve(teamDir, teamName, pipelineName, 'variants', variantName),
-						path.resolve(root, 'credentials.yml'),
-					]))
-			}
+    const allPipelines = []
 
-			// single pipeline
-			return getDataAndUseIt(pipelineName, [
-				path.resolve(teamDir, teamName, pipelineName, `${pipelineName}.yml`),
-				path.resolve(root, 'common-vars.yml'),
-				path.resolve(root, 'credentials.yml'),
-			])
-		})
-	)
-		.then(() => Promise.resolve(reposToPipelines))
+    // For each team
+    await Promise.map(fs.readdir(teamDir), x => path.join(teamDir, x)).filter(isDir).each(teamName => {
+      const teamPath = path.resolve(teamDir, teamName)
+
+      // For each pipeline
+      return Promise.map(fs.readdir(teamPath), x => path.join(teamPath, x)).filter(isDir).each(async pipelinePath => {
+        const pipelineName = (path.parse(pipelinePath)).name
+
+        // Don't do anything if the pipeline is disabled
+        if( await exists(path.join(pipelinePath, 'disabled')) ) {
+          return
+        }
+
+        if( await exists(path.join(pipelinePath, 'variants')) ) {
+          // variants folder exists, multiple pipelines for same repo
+          const variantNames = await fs.readdir(path.join(pipelinePath, 'variants'))
+          variantNames.forEach(variantName => allPipelines.push({
+            teamName: (path.parse(teamName)).name,
+            pipelineName: (path.parse(variantName)).name,
+            filePaths: [
+              path.join(pipelinePath, `${pipelineName}.yml`),
+              commonVarsPath,
+              path.join(pipelinePath, 'variants', variantName),
+              credentialsPath,
+            ],
+          }))
+          return
+        }
+
+        // single pipeline
+        allPipelines.push({
+          teamName: (path.parse(teamName)).name,
+          pipelineName: (path.parse(pipelineName)).name,
+          filePaths: [
+            path.join(pipelinePath, `${pipelineName}.yml`),
+            commonVarsPath,
+            credentialsPath,
+          ],
+        })
+      })
+    })
+
+    return Promise.reduce(allPipelines, async (acc, { pipelineName, teamName, filePaths }) => {
+      // Read the list of files to template and return the finished data.
+      const fileData = await readTemplatedYaml(filePaths)
+
+      // Extract the webhook tokens from the fully templated file.
+      // Also send an object that will be composited into every item returned.
+      const tokens = getTokens(fileData, {
+        pipelineName,
+        teamName,
+      })
+
+      // Merge this information in to make a final listing of the tokens for each pipeline
+      Object.keys(tokens).forEach(repoName => {
+        if( !(repoName in acc) ) {
+          acc[repoName] = []
+        }
+        acc[repoName] = acc[repoName].concat(tokens[repoName])
+      })
+
+      return acc
+    }, {})
+  } catch ( err ) {
+    err.data = 'Encountered error while retrieving all webhooks'
+    throw err
+  }
 }

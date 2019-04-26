@@ -95,15 +95,16 @@ autotree-hooks-generate --concourse-root ~/concourse --concourse-webhook-url htt
 ```
 
 ### Flags
-| Name                   | Default Value | Description                                                                        |
-| ---------------------- | ------------- | ---------------------------------------------------------------------------------- |
-| concourse-root         | N/A, required | A file path to the Concourse Pipelines repository.                                 |
-| concourse-webhook-url  | N/A, required | The protocol and hostname where Bitbucket can reach your Concourse instance.       |
-| noop                   | false         | Specify --noop to see what the generator would do, rather than actually do it. |
-| manage-repositories    | false         | Create a resource to manage each repository as well as webhooks. Not recommended.  |
-| clean                  | false         | Do nothing but clean up files. Can be combined with --noop                         |
-| filter-repo-owner      | N/A           | If specified, use only repositories that begin with this string.                   |
-| skip-cert-verification | false         | If specified, webhooks will ignore SSL errors.                                     |
+| Name                       | Default Value | Description                                                                            |
+| -------------------------- | ------------- | -------------------------------------------------------------------------------------- |
+| concourse-root             | N/A, required | A file path to the Concourse Pipelines repository.                                     |
+| concourse-webhook-url      | N/A, required | The protocol and hostname where Bitbucket can reach your Concourse instance.           |
+| noop                       | false         | Specify --noop to see what the generator would do, rather than actually do it.         |
+| manage-repositories        | false         | Create a resource to manage each repository as well as webhooks. Not recommended.      |
+| clean                      | false         | Do nothing but clean up files. Can be combined with --noop                             |
+| filter-repo-owner          | N/A           | If specified, use only repositories that begin with this string.                       |
+| skip-cert-verification     | false         | If specified, webhooks will ignore SSL errors.                                         |
+| bitbucket-provider-version | N/A           | If specified, the generated Terraform Bitbucket provider will use this version string. |
 
 
 ## Import Resources

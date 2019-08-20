@@ -25,15 +25,15 @@ module.exports = async (args, reposToPipelines) => {
     }
 
     if( args['--bitbucket-provider-version'] ) {
-      bitbucketProviderConfiguration.version = args['--bitbucketProviderConfiguration']
+      bitbucketProviderConfiguration.version = args['--bitbucket-provider-version']
     }
 
     providerGenesis.addProvider('bitbucket', bitbucketProviderConfiguration)
 
-    // Read in the provider.json file and use it to create the provider.
-    const providerData = JSON.parse(await fs.readFile('provider.json'))
-    Object.keys(providerData).forEach(providerName => {
-      providerGenesis.addBackend(providerName, providerData[providerName])
+    // Read in the backend.json file and use it to create the backend.
+    const backendData = JSON.parse(await fs.readFile('backend.json'))
+    Object.keys(backendData).forEach(backendName => {
+      providerGenesis.addBackend(backendName, backendData[backendName])
     })
 
     filesToWrite['provider.tf'] = providerGenesis

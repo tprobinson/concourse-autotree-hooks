@@ -46,9 +46,9 @@ yarn global add concourse-autotree-hooks
 
 This module gives the command `autotree-hooks-generate`. Be sure to create a folder for any generated files and always run commands in that folder.
 
-### Terraform Provider
+### Terraform Backends
 
-Create a file called `provider.json`. This file should contain data about the Terraform backend you intend to use, in JSON format. An example of an S3 backend:
+Create a file called `backend.json`. This file should contain data about the Terraform backend you intend to use, in JSON format. An example of an S3 backend:
 ```json
 {
 	"s3": {
